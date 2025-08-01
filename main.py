@@ -15,7 +15,7 @@ from analysis.missing_birth_year.missing_birth import check_missing_birth_year
 from analysis.suspicious_duration.suspicious_duration import check_duration_one_second, check_suspicious_duration, find_inconsistent_trip_durations
 from analysis.check_gender.check_gender import check_gender
 
-from questions_metiers.mongodb_queries import update_gender_zero, get_most_frequent_trips_female, nb_travels_by_type, avg_duration_by_station_morning, top_3_start_stations_morning, median_duration_over_65
+from questions_metiers.mongodb_queries import update_gender_zero, get_most_frequent_trips_female, nb_travels_by_type, avg_duration_by_station_morning, top_3_start_stations_morning, median_duration_over_65, nb_travel_by_two_hours
 
 json_path = 'data/trips_.json'
 
@@ -68,6 +68,7 @@ find_inconsistent_trip_durations(df)
 df = check_gender(df)
 
 updated_cleaned_data = df.to_dict(orient='records')
+
 # update base
 drop_collection(collection)
 insert_data(collection, updated_cleaned_data, label="(Mise à jour de la base après enquête)")   
@@ -78,4 +79,5 @@ get_most_frequent_trips_female()
 nb_travels_by_type()
 avg_duration_by_station_morning()
 top_3_start_stations_morning()
-#median_duration_over_65()
+#median_duration_over_65() # pas encore fonctionnel
+#nb_travel_by_two_hours() # pas encore fonctionnel
