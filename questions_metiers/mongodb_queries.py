@@ -1,5 +1,7 @@
 from load.load_mongo import get_mongo_collection
 from datetime import datetime
+import json
+import os
 
 collection = get_mongo_collection()
 
@@ -75,14 +77,21 @@ def avg_duration_by_station_morning():
     ]
     results = list(collection.aggregate(pipeline))
 
-    print("\nDurée moy trajets entre 7h et 9h par station:")
-    for res in results:
-        station = res['_id']
-        # transfo minutes
-        avg_dur = round(res['average_duration'] / 60, 2) 
-        print(f"{station} : {avg_dur} min")
+    # formatage resultat en dict
+    formatted_results = [
+        {
+            "station": res['_id'],
+            "average_duration_minutes": round(res['average_duration'] / 60, 2)
+        }
+        for res in results
+    ]
 
-    return results
+    json_file_path = os.path.join(os.path.dirname(__file__), 'avg_duration_by_station_morning.json')
+        
+    with open(json_file_path, 'w') as json_file:
+        json.dump(formatted_results, json_file, indent=4)
+
+    return json_file_path
 
 def top_3_start_stations_morning():
     pipeline = [
@@ -141,5 +150,5 @@ def median_duration_over_65():
         print(f"Naissance: {birth} | Âge: {age}")
         unique_ages.add(age)
 
-    print("\nListe unique des âges :", sorted(unique_ages))
     return sorted(unique_ages)
+
