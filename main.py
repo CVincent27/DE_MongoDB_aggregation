@@ -1,6 +1,8 @@
 import json
 from bson import json_util
 import pandas as pd
+import os
+
 
 from cleaning.check_missing_values import data_type, missing_values, find_duplicates, drop_duplicates
 from cleaning.clean_data import clean_keys
@@ -10,7 +12,7 @@ from load.load_mongo import drop_collection, insert_data, get_mongo_collection
 from analysis.suspicious_date.suspicious_date import mark_overlaps
 from analysis.check_age.check_age import check_age
 from analysis.missing_birth_year.missing_birth import check_missing_birth_year
-from analysis.suspicious_duration.suspicious_duration import check_duration_one_second, check_suspicious_duration
+from analysis.suspicious_duration.suspicious_duration import check_duration_one_second, check_suspicious_duration, find_inconsistent_trip_durations
 from analysis.check_gender.check_gender import check_gender
 
 from questions_metiers.mongodb_queries import update_gender_zero, get_most_frequent_trips_female, nb_travels_by_type, avg_duration_by_station_morning, top_3_start_stations_morning, median_duration_over_65
@@ -37,7 +39,7 @@ df = drop_duplicates(df)
 df.to_json("data/cleaned_data.json", orient="records", lines=True)
 
 # Conversion finale avant insertion
-#cleaned_data = df.to_dict(orient='records')
+cleaned_data = df.to_dict(orient='records')
 
 # 1ere Insertion en base avant enquete
 collection = get_mongo_collection()
@@ -60,10 +62,10 @@ df = check_missing_birth_year(df)
 ## Duration 1s et durée suspicieuse
 df = check_duration_one_second(df)
 df = check_suspicious_duration(df)
+find_inconsistent_trip_durations(df)
 
 # Check 0 gender
 df = check_gender(df)
-
 
 updated_cleaned_data = df.to_dict(orient='records')
 # update base
@@ -71,9 +73,9 @@ drop_collection(collection)
 insert_data(collection, updated_cleaned_data, label="(Mise à jour de la base après enquête)")   
 
 ## Questions métiers
-#update_gender_zero()
-#get_most_frequent_trips_female()
-#nb_travels_by_type()
-#avg_duration_by_station_morning()
-#top_3_start_stations_morning()
+update_gender_zero()
+get_most_frequent_trips_female()
+nb_travels_by_type()
+avg_duration_by_station_morning()
+top_3_start_stations_morning()
 #median_duration_over_65()
