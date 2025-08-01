@@ -5,6 +5,7 @@ import os
 
 collection = get_mongo_collection()
 
+# * Changez le gender 0 en gender 1
 def update_gender_zero():
     result = collection.update_many(
         {"gender": 0},
@@ -34,7 +35,9 @@ def get_most_frequent_trips_female():
         end = res['_id']['end_station_name']
         count = res['count']
         print(f"De {start} à {end} : {count} trajets")
+    print("\n")
 
+# * Quel est le nombre total de trajets par type d’utilisateur (Subscriber vs Customer) pour le premier jour de l'année ?
 def nb_travels_by_type():
     pipeline = [
         {
@@ -58,9 +61,10 @@ def nb_travels_by_type():
     ]
     results = list(collection.aggregate(pipeline))
     for result in results:
-        print(f"\ntype: {result['_id']}, nb travel: {result['count']} le 01/01/2016")
+        print(f"type: {result['_id']}, nb travel: {result['count']} le 01/01/2016")
     return results
 
+# * Quelle est la durée moyenne des trajets par station de départ pour les trajets commençant entre 7h et 9h ?
 def avg_duration_by_station_morning():
     pipeline = [
         {"$addFields": {
@@ -90,9 +94,10 @@ def avg_duration_by_station_morning():
         
     with open(json_file_path, 'w') as json_file:
         json.dump(formatted_results, json_file, indent=4)
-
+    print("\nJSON avg_duration_by_station_morning crée")
     return json_file_path
 
+# * Quel est le top 3 des stations avec la plus forte fréquentation de prise de location, entre 6h et 8h ?
 def top_3_start_stations_morning():
     pipeline = [
         {"$addFields": {
@@ -118,6 +123,8 @@ def top_3_start_stations_morning():
 
     return results
 
+# * Quelle est la durée médiane des trajets pour les + de 65 ans ?
+# pipeline en cours de construction
 def median_duration_over_65():
     pipeline = [
         {
@@ -142,13 +149,46 @@ def median_duration_over_65():
     results = list(collection.aggregate(pipeline))
 
     unique_ages = set()
-
-    print("\nCheck du calcul d'âge :")
-    for res in results:
-        birth = res.get("birth_year")
-        age = res.get("age")
-        print(f"Naissance: {birth} | Âge: {age}")
-        unique_ages.add(age)
+    # print("\nCheck du calcul d'âge :")
+    # for res in results:
+    #     birth = res.get("birth_year")
+    #     age = res.get("age")
+    #     print(f"Naissance: {birth} | Âge: {age}")
+    #     unique_ages.add(age)
 
     return sorted(unique_ages)
 
+# * Quelle est la répartition des trajets (nombre de trajets) par tranche horaire de 2 heures (faire visualisation, 0h-2h, 2h-4h etc..) ?
+# pipeline en cours de construction
+def nb_travel_by_two_hours():
+    pipeline = [
+        {
+            "$addFields": {
+                "start_hour": { "$hour": "$start_time" }
+            }
+        },
+        {
+            "$group": {
+                "_id": {
+                    "$subtract": [
+                        { "$divide": ["$start_hour", 2] },
+                        { "$mod": [{ "$divide": ["$start_hour", 2] }, 1] }
+                    ]
+                },
+                "count": { "$sum": 1 }
+            }
+        },
+        {
+            "$sort": { "_id": 1 }
+        }
+    ]
+    results = list(collection.aggregate(pipeline))
+
+    # json_file_path = os.path.join(os.path.dirname(__file__), 'nb_travel_by_two_hours.json')
+        
+    # with open(json_file_path, 'w') as json_file:
+    #     json.dump(results, json_file, indent=4)
+    # print("JSON nb travail by two hours crée")
+    # return json_file_path
+
+    #visualisation à faire
